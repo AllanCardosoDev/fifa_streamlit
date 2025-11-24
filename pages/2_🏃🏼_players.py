@@ -5,8 +5,11 @@ st.set_page_config(
     page_icon="🏃🏼",
     layout="wide"
 )
+
 df_data = st.session_state["data"]
 
+# Sidebar com filtros
+st.sidebar.markdown("## 🔍 Filtros")
 
 clubes = df_data["Club"].value_counts().index
 club = st.sidebar.selectbox("Clube", clubes)
@@ -15,24 +18,70 @@ df_players = df_data[(df_data["Club"] == club)]
 players = df_players["Name"].value_counts().index
 player = st.sidebar.selectbox("Jogador", players)
 
+# Dados do jogador selecionado
 player_stats = df_data[df_data["Name"] == player].iloc[0]
 
-st.image(player_stats["Photo"])
-st.title(player_stats["Name"])
+# Layout do jogador
+col1, col2 = st.columns([1, 3])
 
-st.markdown(f"**Clube:** {player_stats['Club']}")
-st.markdown(f"**Posição:** {player_stats['Position']}")
+with col1:
+    st.image(player_stats["Photo"])
+    st.image(player_stats["Flag"], width=50)
 
-col1, col2, col3, col4 = st.columns(4)
-col1.markdown(f"**Idade:** {player_stats['Age']}")
-col2.markdown(f"**Altura:** {player_stats['Height(cm.)'] / 100}")
-col3.markdown(f"**Peso:** {player_stats['Weight(lbs.)']*0.453:.2f}")
+with col2:
+    st.title(f"{player_stats['Name']}")
+    st.markdown(f"### {player_stats['Club']}")
+    st.markdown(f"**Posição:** {player_stats['Position']}")
+
+    col_a, col_b, col_c = st.columns(3)
+    col_a.markdown(f"**Idade:** {player_stats['Age']} anos")
+    col_b.markdown(f"**Altura:** {player_stats['Height(cm.)'] / 100:.2f} m")
+    col_c.markdown(f"**Peso:** {player_stats['Weight(lbs.)'] * 0.453:.2f} kg")
+
 st.divider()
 
-st.subheader(f"Overall {player_stats['Overall']}")
-st.progress(int(player_stats["Overall"]))
+# Overall
+st.subheader(f"⭐ Overall: {player_stats['Overall']}")
+st.progress(int(player_stats["Overall"]) / 100)
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric(label="Valor de mercado", value=f"£ {player_stats['Value(£)']:,}")
-col2.metric(label="Remuneração semanal", value=f"£ {player_stats['Wage(£)']:,}")
-col3.metric(label="Cláusula de rescisão", value=f"£ {player_stats['Release Clause(£)']:,}")
+st.divider()
+
+# Informações financeiras
+st.subheader("💰 Informações Financeiras")
+col1, col2, col3 = st.columns(3)
+
+col1.metric(
+    label="Valor de Mercado", 
+    value=f"£ {player_stats['Value(£)']:,.0f}"
+)
+col2.metric(
+    label="Salário Semanal", 
+    value=f"£ {player_stats['Wage(£)']:,.0f}"
+)
+col3.metric(
+    label="Cláusula de Rescisão", 
+    value=f"£ {player_stats['Release Clause(£)']:,.0f}"
+)
+
+st.divider()
+
+# Estatísticas técnicas
+st.subheader("🎯 Principais Atributos")
+
+# Pega alguns atributos relevantes
+attributes = {
+    'Pace': player_stats.get('Pace', 0),
+    'Shooting': player_stats.get('Shooting', 0),
+    'Passing': player_stats.get('Passing', 0),
+    'Dribbling': player_stats.get('Dribbling', 0),
+    'Defending': player_stats.get('Defending', 0),
+    'Physical': player_stats.get('Physic', 0)
+}
+
+col1, col2, col3 = st.columns(3)
+cols = [col1, col2, col3]
+
+for idx, (attr, value) in enumerate(attributes.items()):
+    with cols[idx % 3]:
+        st.metric(label=attr, value=f"{value}")
+        st.progress(int(value) / 100)
