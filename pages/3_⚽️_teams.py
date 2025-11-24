@@ -15,11 +15,15 @@ club = st.sidebar.selectbox("Clube", clubes)
 # Filtrar dados do clube
 df_filtered = df_data[(df_data["Club"] == club)].set_index("Name")
 
-# Cabeçalho do clube
+# Cabeçalho do clube - CORRIGIDO
 col1, col2 = st.columns([1, 4])
 
 with col1:
-    st.image(df_filtered.iloc[0]["Club Logo"])
+    # Logo do clube com largura controlada
+    try:
+        st.image(df_filtered.iloc[0]["Club Logo"], width=150)
+    except:
+        st.warning("Logo não disponível")
 
 with col2:
     st.markdown(f"# {club}")
@@ -50,8 +54,14 @@ st.dataframe(
             min_value=0, 
             max_value=df_filtered["Wage(£)"].max()
         ),
-        "Photo": st.column_config.ImageColumn("Foto"),
-        "Flag": st.column_config.ImageColumn("País"),
+        "Photo": st.column_config.ImageColumn(
+            "Foto",
+            width="small"  # ADICIONADO: controla tamanho
+        ),
+        "Flag": st.column_config.ImageColumn(
+            "País",
+            width="small"  # ADICIONADO: controla tamanho
+        ),
         "Value(£)": st.column_config.NumberColumn(
             "Valor",
             format="£%.0f"
