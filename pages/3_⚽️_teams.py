@@ -1,4 +1,6 @@
 import streamlit as st
+import pandas as pd
+from datetime import datetime
 
 st.set_page_config(
     page_title="Teams",
@@ -6,36 +8,41 @@ st.set_page_config(
     layout="wide"
 )
 
+# CARREGAR DADOS SE NÃO EXISTIREM
+if "data" not in st.session_state:
+    df_data = pd.read_csv("datasets/CLEAN_FIFA23_official_data.csv", index_col=0)
+    df_data = df_data[df_data["Contract Valid Until"] >= datetime.today().year]
+    df_data = df_data[df_data["Value(£)"] > 0]
+    df_data = df_data.sort_values(by="Overall", ascending=False)
+    st.session_state["data"] = df_data
+
 df_data = st.session_state["data"]
 
 # Sidebar
+st.sidebar.markdown("## 🔍 Filtros")
 clubes = df_data["Club"].value_counts().index
 club = st.sidebar.selectbox("Clube", clubes)
 
 # Filtrar dados do clube
 df_filtered = df_data[(df_data["Club"] == club)].set_index("Name")
 
-# Cabeçalho do clube - CORRIGIDO
-col1, col2 = st.columns([1, 4])
+# Cabeçalho do clube
+st.title(f"🏆 {club}")
 
+col1, col2, col3 = st.columns(3)
 with col1:
-    # Logo do clube com largura controlada
-    try:
-        st.image(df_filtered.iloc[0]["Club Logo"], width=150)
-    except:
-        st.warning("Logo não disponível")
-
+    st.metric("Total de Jogadores", len(df_filtered))
 with col2:
-    st.markdown(f"# {club}")
-    st.markdown(f"**Total de Jogadores:** {len(df_filtered)}")
-    st.markdown(f"**Overall Médio:** {df_filtered['Overall'].mean():.1f}")
+    st.metric("Overall Médio", f"{df_filtered['Overall'].mean():.1f}")
+with col3:
+    st.metric("Valor Total do Elenco", f"£ {df_filtered['Value(£)'].sum():,.0f}")
 
 st.divider()
 
-# Tabela de jogadores
+# Tabela de jogadores (SEM IMAGENS por enquanto)
 st.subheader("📋 Elenco Completo")
 
-columns = ["Age", "Photo", "Flag", "Overall", 'Value(£)', 'Wage(£)', 'Joined', 
+columns = ["Age", "Overall", "Position", 'Value(£)', 'Wage(£)', 'Joined', 
            'Height(cm.)', 'Weight(lbs.)',
            'Contract Valid Until', 'Release Clause(£)']
 
@@ -53,14 +60,6 @@ st.dataframe(
             format="£%f",
             min_value=0, 
             max_value=df_filtered["Wage(£)"].max()
-        ),
-        "Photo": st.column_config.ImageColumn(
-            "Foto",
-            width="small"  # ADICIONADO: controla tamanho
-        ),
-        "Flag": st.column_config.ImageColumn(
-            "País",
-            width="small"  # ADICIONADO: controla tamanho
         ),
         "Value(£)": st.column_config.NumberColumn(
             "Valor",
