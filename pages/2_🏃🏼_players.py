@@ -21,17 +21,28 @@ player = st.sidebar.selectbox("Jogador", players)
 # Dados do jogador selecionado
 player_stats = df_data[df_data["Name"] == player].iloc[0]
 
-# Layout do jogador
+# Layout do jogador - CORRIGIDO
 col1, col2 = st.columns([1, 3])
 
 with col1:
-    st.image(player_stats["Photo"])
-    st.image(player_stats["Flag"], width=50)
+    # Foto do jogador com largura controlada
+    try:
+        st.image(player_stats["Photo"], width=200)
+    except:
+        st.warning("Foto não disponível")
+
+    # Bandeira do país
+    try:
+        st.image(player_stats["Flag"], width=80)
+    except:
+        st.warning("Bandeira não disponível")
 
 with col2:
     st.title(f"{player_stats['Name']}")
     st.markdown(f"### {player_stats['Club']}")
     st.markdown(f"**Posição:** {player_stats['Position']}")
+
+    st.markdown("---")
 
     col_a, col_b, col_c = st.columns(3)
     col_a.markdown(f"**Idade:** {player_stats['Age']} anos")
